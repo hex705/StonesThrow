@@ -1,0 +1,25 @@
+StonesThrow	KEYWORD1
+
+begin	KEYWORD2
+init	KEYWORD2
+update	KEYWORD2
+verboseStart	KEYWORD2
+verboseStop	KEYWORD2
+
+setSrcNode	KEYWORD2
+setDstNode	KEYWORD2
+getSrcNode	KEYWORD2
+getDstNode	KEYWORD2
+
+remoteDigitalWrite	KEYWORD2
+remoteAnalogWrite	KEYWORD2
+remoteAnalogRead	KEYWORD2
+remoteDigitalRead	KEYWORD2
+
+
+
+sendPackage	KEYWORD2
+readPackage	KEYWORD2
+executePackage	KEYWORD2
+displayPackage	KEYWORD2
+myDigitalBlink	KEYWORD2
