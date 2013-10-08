@@ -18,10 +18,9 @@ GNU General Public License for more details.
 #ifndef StonesThrow_h
 #define StonesThrow_h
 
-#include "Wprogram.h"
 
-// default baud rate
-#define DEFAULT_BAUD 9600
+#include <HardwareSerial.h>
+
 
 // serial payload delimiters
 #define START_BYTE 42   //    42 = * 
@@ -39,17 +38,18 @@ GNU General Public License for more details.
 #define TEMP_BUFFER_LENGTH 5   // max size of a chunk
 #define PACKAGE_BUFFER_LENGTH 7
 
-#define TIME_OUT 5000  // time to wait for a return value in READ functions
+#define TIME_OUT 1500  // time to wait for a return value in READ functions
 
 class StonesThrow
 {
-public:
-	// constructor
-	StonesThrow(); 
 	
+	
+public:
+
+	StonesThrow();
 	// initialize system
-	void begin();
-	void begin(int, int);
+	void begin( HardwareSerial & );
+	void begin( HardwareSerial &, int, int );
 	void init();
 	
 	// node labelling 
@@ -81,6 +81,9 @@ public:
 
 	
 private:
+	
+	
+	HardwareSerial *serial;
 	
 	int _pin;  // for test function -- CAN DELETE LATER
 	

@@ -17,30 +17,27 @@ GNU General Public License for more details.
 
 #include "Wprogram.h"
 #include "HardwareSerial.h"
+
 #include "StonesThrow.h"
 
 
-StonesThrow::StonesThrow(void)
-{	
-	// add more here later ??
+StonesThrow::StonesThrow();
+
+
+void StonesThrow::begin( HardwareSerial &s )
+{
+	
+	 int src = 1;
+	 int dst = 1;
+	 // pass settings to next function 
+	 StonesThrow::begin ( s , src, dst ); 
 	
 }
 
 
-void StonesThrow::begin(void)
+void StonesThrow::begin( HardwareSerial &s, int src, int dst)
 {
-	 int src = 1;
-	 int dst = 1;
-	 Serial.begin(19200);
-	 setSrcNode(src);  // default node identifiers
-	 setDstNode(dst);  // default node identifiers
-	 init();
-}
-
-
-void StonesThrow::begin(int src, int dst)
-{
-	 Serial.begin(DEFAULT_BAUD);
+	 serial = s;
 	 setSrcNode(src);  // user node identifier
 	 setDstNode(dst);  // user node identifier
 	 init();
@@ -48,14 +45,17 @@ void StonesThrow::begin(int src, int dst)
 
 void StonesThrow::init(void)
 {
+	
 	type = -1;
 	highByte = 0;
 	lastPackageSize = -1;
 	packageComplete = false;
 	verbose = false;
-	
-	Serial.println("stoneThrow Inititalized");	
+	if (serial) { 
+		serial->println("stoneThrow Inititalized");	
+	}
 	delay(1500);
+	
 }
 
 
@@ -90,15 +90,15 @@ void StonesThrow::verboseStop(){
 
 void StonesThrow::update(){
 	// read the serial port and go get the data from it if some have arrived
-	
-	if(Serial.available()>0){
+	int size;	
+	if ( (size = serial->available()) > 0 ){
 	    readPackage();
 		displayPackage();
 		executePackage();
 	  }
 	
 //	if (verbose){
-//		Serial.println("update complete");
+//		serial->println("update complete");
 //	}
 
 }
@@ -110,34 +110,34 @@ void StonesThrow::sendPackage(int type, int pin, int lowByte, int highByte){
   int _lowByte = lowByte;
   int _highByte = highByte;
 
-  Serial.print(START_BYTE, BYTE);  
-  //Serial.print(DELIMITER, BYTE);        
+  serial->print(START_BYTE, BYTE);  
+  //serial->print(DELIMITER, BYTE);        
   
-  Serial.print(srcNode);               
-  Serial.print(DELIMITER, BYTE);       
+  serial->print(srcNode);               
+  serial->print(DELIMITER, BYTE);       
   
-  Serial.print(dstNode); 
-  Serial.print(DELIMITER, BYTE);    
+  serial->print(dstNode); 
+  serial->print(DELIMITER, BYTE);    
 
-  Serial.print(_type,DEC);         
-  Serial.print(DELIMITER, BYTE);       
+  serial->print(_type,DEC);         
+  serial->print(DELIMITER, BYTE);       
 
-  Serial.print(_pin,DEC); 
-  Serial.print(DELIMITER, BYTE);      
+  serial->print(_pin,DEC); 
+  serial->print(DELIMITER, BYTE);      
   
-  Serial.print(_lowByte,DEC);   
-  Serial.print(DELIMITER, BYTE);     
+  serial->print(_lowByte,DEC);   
+  serial->print(DELIMITER, BYTE);     
 
-  Serial.print(_highByte,DEC);   
-  Serial.print(DELIMITER, BYTE);     
+  serial->print(_highByte,DEC);   
+  serial->print(DELIMITER, BYTE);     
  
-  Serial.println(END_BYTE,BYTE);  
+  serial->println(END_BYTE,BYTE);  
 
 } //end of message
 
 void StonesThrow::readPackage(void){
 
-  int inByte = Serial.read();
+  int inByte = serial->read();
 
   if(inByte == START_BYTE){
     
@@ -163,14 +163,14 @@ void StonesThrow::readPackage(void){
         tempIndex = 0;
       } // else if
       
-      inByte = Serial.read();  // reset the conditional for while 
+      inByte = serial->read();  // reset the conditional for while 
     } // end while
     
     lastPackageSize = packageIndex;
 
 	if (verbose){
-		Serial.print("lastPackageSize: ");
-		Serial.println(lastPackageSize);
+		serial->print("lastPackageSize: ");
+		serial->println(lastPackageSize);
 	}
 	
 	
@@ -199,7 +199,7 @@ void StonesThrow::executePackage(){
           pinMode(_r_pin,INPUT);
           int lowByte = digitalRead(_r_pin);
           
-		  Serial.flush();
+		  serial->flush();
           sendPackage(8,_r_pin,lowByte,1);
 		 
           break;
@@ -220,7 +220,7 @@ void StonesThrow::executePackage(){
           int highByte = temp >> 8;
           int lowByte = temp & B11111111;
           
-		  Serial.flush();
+		  serial->flush();
           sendPackage(9,_r_pin,lowByte,highByte);
           
           break;
@@ -248,7 +248,7 @@ void StonesThrow::executePackage(){
 	for (int i = 0; i <= 7; i++){
 		packageBuffer[i] = 0;
 	}
-	Serial.flush();
+	serial->flush();
   } // end packageBuffer[1]
 
 }  // end execute package
@@ -259,15 +259,15 @@ void StonesThrow::displayPackage(void){
     
     if(packageComplete){
 
-      Serial.print(srcNode);
-      Serial.print(", displaying received data: ");
+      serial->print(srcNode);
+      serial->print(", displaying received data: ");
 
       for (int i = 0; i < lastPackageSize; i++){
-        Serial.print(packageBuffer[i],DEC);
-        Serial.print("  ");
+        serial->print(packageBuffer[i],DEC);
+        serial->print("  ");
       }
 
-      Serial.println();
+      serial->println();
      
     }  // end packageComplete
   } // end packageBuffer[1]
@@ -306,7 +306,7 @@ void StonesThrow::remoteAnalogWrite(int remotePin, int targetState){
 
 int StonesThrow::remoteDigitalRead(int remotePin){
 
-	Serial.flush();
+	serial->flush();
   // Set TYPE
   type = DIGITAL_READ;
   sendPackage(type,remotePin, 0, 0);
@@ -316,9 +316,11 @@ int StonesThrow::remoteDigitalRead(int remotePin){
   long elapsed = 0;
   	boolean timeOut = false;
 	packageComplete = false;
-
+	
+    int size;
 	while (!timeOut && !packageComplete){
-		if(Serial.available()>0){
+			
+		if ( (size = serial->available()) > 0 ){
 			readPackage();
 			displayPackage();
 		}  // end serial if
@@ -334,12 +336,13 @@ int StonesThrow::remoteDigitalRead(int remotePin){
 	
     if (packageComplete == true) {
       
-	  int val = packageBuffer[4];
-      return val;  // the requested digital value
+	    int val = packageBuffer[4];
+        return val;  // the requested digital value
       
     } else {
 
-		return -2;
+	   return -2;
+		
 	}
 
   
@@ -348,7 +351,7 @@ int StonesThrow::remoteDigitalRead(int remotePin){
 
 int StonesThrow::remoteAnalogRead(int remotePin){
 
-  Serial.flush();
+  serial->flush();
   // Set TYPE
   type = ANALOG_READ;
   
@@ -360,8 +363,10 @@ int StonesThrow::remoteAnalogRead(int remotePin){
   	boolean timeOut = false;
 	packageComplete = false;
 
+    int size;
 	while (!timeOut && !packageComplete){
-		if(Serial.available()>0){
+		
+		if ( (size = serial->available()) > 0 ){
 			readPackage();
 			displayPackage();
 		}  // end serial if
@@ -373,6 +378,7 @@ int StonesThrow::remoteAnalogRead(int remotePin){
 	    } // end elapsed if
 
 	} // end while
+	
 // end wait for reply
 
     if (packageComplete == true) {  
