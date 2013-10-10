@@ -19,6 +19,13 @@ GNU General Public License for more details.
 #define StonesThrow_h
 
 
+#if defined(ARDUINO) && ARDUINO >= 100
+#include "Arduino.h"
+#else
+#include "WProgram.h"
+#endif
+
+
 #include <HardwareSerial.h>
 
 

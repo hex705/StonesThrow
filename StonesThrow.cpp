@@ -15,18 +15,27 @@ GNU General Public License for more details.
 	
 */
 
-#include "Wprogram.h"
-#include "HardwareSerial.h"
+
 
 #include "StonesThrow.h"
 
 
-StonesThrow::StonesThrow();
+#if defined(ARDUINO) && ARDUINO >= 100
+#include "Arduino.h"
+#else
+#include "WProgram.h"
+#endif
+
+
+#include "HardwareSerial.h"
+
+StonesThrow::StonesThrow(){;}
 
 
 void StonesThrow::begin( HardwareSerial &s )
 {
 	
+	 serial = &s;
 	 int src = 1;
 	 int dst = 1;
 	 // pass settings to next function 
@@ -37,7 +46,7 @@ void StonesThrow::begin( HardwareSerial &s )
 
 void StonesThrow::begin( HardwareSerial &s, int src, int dst)
 {
-	 serial = s;
+	 serial = &s;
 	 setSrcNode(src);  // user node identifier
 	 setDstNode(dst);  // user node identifier
 	 init();
@@ -110,28 +119,31 @@ void StonesThrow::sendPackage(int type, int pin, int lowByte, int highByte){
   int _lowByte = lowByte;
   int _highByte = highByte;
 
-  serial->print(START_BYTE, BYTE);  
-  //serial->print(DELIMITER, BYTE);        
+
+  serial->write(START_BYTE);  
+ 
+ //serial->print(DELIMITER, BYTE);        
   
   serial->print(srcNode);               
-  serial->print(DELIMITER, BYTE);       
+  serial->write(DELIMITER);       
   
   serial->print(dstNode); 
-  serial->print(DELIMITER, BYTE);    
+  serial->write(DELIMITER);    
 
   serial->print(_type,DEC);         
-  serial->print(DELIMITER, BYTE);       
+  serial->write(DELIMITER);       
 
   serial->print(_pin,DEC); 
-  serial->print(DELIMITER, BYTE);      
+  serial->write(DELIMITER);      
   
   serial->print(_lowByte,DEC);   
-  serial->print(DELIMITER, BYTE);     
+  serial->write(DELIMITER);     
 
   serial->print(_highByte,DEC);   
-  serial->print(DELIMITER, BYTE);     
+  serial->write(DELIMITER);     
  
-  serial->println(END_BYTE,BYTE);  
+  serial->write(END_BYTE);  
+serial->write('\n');
 
 } //end of message
 
